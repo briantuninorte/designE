@@ -1,7 +1,6 @@
 package com.example.gpssmstrck;
 
 
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 
 import android.Manifest;
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText Port1;
     private Button Inicio;
     private Button Pair;
-    private String deviceAddress;
+    private String deviceAddress = "";
     private BluetoothSocket socket = null;
     private final long MIN_TIME = 1000;
     private final long MIN_DIST = 1;
@@ -76,30 +75,7 @@ public class MainActivity extends AppCompatActivity {
     Spinner Conductor;
 
 
-
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, PackageManager.PERMISSION_GRANTED);
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, PackageManager.PERMISSION_GRANTED);
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH}, PackageManager.PERMISSION_GRANTED);
-        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_ADMIN}, PackageManager.PERMISSION_GRANTED);
-        IPdestino = (EditText) findViewById(R.id.IPdest);
-        IPdestino2 = (EditText) findViewById(R.id.IPdest2);
-        IPdestino3 = (EditText) findViewById(R.id.IPdest3);
-        IPdestino4 = (EditText) findViewById(R.id.IPdest4);
-        IPdestino5 = (EditText) findViewById(R.id.IPdest5);
-        Port1 = (EditText) findViewById(R.id.Puerto2);
-        Inicio = (Button) findViewById(R.id.InicioBt);
-
-
-        Conductor = findViewById(R.id.Conductor);
-        String[] Opciones = {"Conductor 1", "Conductor 2"};
-
-        ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, Opciones);
-        Conductor.setAdapter(adapter1);
+    public void btbut(View view) {
 
         ArrayList deviceStrs = new ArrayList();
         final ArrayList devices = new ArrayList();
@@ -131,6 +107,35 @@ public class MainActivity extends AppCompatActivity {
 
         alertDialog.setTitle("Selecciona el Dispositivo Bluetooth");
         alertDialog.show();
+    }
+
+
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+
+
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_main);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, PackageManager.PERMISSION_GRANTED);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, PackageManager.PERMISSION_GRANTED);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH}, PackageManager.PERMISSION_GRANTED);
+        ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.BLUETOOTH_ADMIN}, PackageManager.PERMISSION_GRANTED);
+        IPdestino = (EditText) findViewById(R.id.IPdest);
+        IPdestino2 = (EditText) findViewById(R.id.IPdest2);
+        IPdestino3 = (EditText) findViewById(R.id.IPdest3);
+        IPdestino4 = (EditText) findViewById(R.id.IPdest4);
+        IPdestino5 = (EditText) findViewById(R.id.IPdest5);
+        Port1 = (EditText) findViewById(R.id.Puerto2);
+        Inicio = (Button) findViewById(R.id.InicioBt);
+
+
+        Conductor = findViewById(R.id.Conductor);
+        String[] Opciones = {"Conductor 1", "Conductor 2"};
+
+        ArrayAdapter<String> adapter1 = new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, Opciones);
+        Conductor.setAdapter(adapter1);
+
 
         Inicio.setOnClickListener(new View.OnClickListener() {
             public void onClick(View view) {
@@ -142,10 +147,9 @@ public class MainActivity extends AppCompatActivity {
                     Conduc = "1";
                 } else if (seleccion.equals("Conductor 2")) {
                     Conduc = "2";
-
                 }
 
-                Toast toast1 = Toast.makeText(getApplicationContext(), "Enviando mensaje...", Toast.LENGTH_SHORT);
+                Toast toast1 = Toast.makeText(getApplicationContext(), "La aplicación ha iniciado...", Toast.LENGTH_SHORT);
                 toast1.show();
 
                 String IPdest1 = null;
@@ -154,15 +158,13 @@ public class MainActivity extends AppCompatActivity {
                 String IPdest4 = null;
                 String IPdest5 = null;
 
-                String Port2 = null;
-
                 IPdest1 = IPdestino.getText().toString();
                 IPdest2 = IPdestino2.getText().toString();
                 IPdest3 = IPdestino3.getText().toString();
                 IPdest4 = IPdestino4.getText().toString();
                 IPdest5 = IPdestino5.getText().toString();
 
-                Port2 = Port1.getText().toString();
+                String Port2 = Port1.getText().toString();
 
                 String finalIPdest1 = IPdest1;
                 String finalIPdest2 = IPdest2;
@@ -171,54 +173,50 @@ public class MainActivity extends AppCompatActivity {
                 String finalIPdest5 = IPdest5;
                 int finalPuerto2 = Integer.valueOf(Port2);
 
-                BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+                if (!deviceAddress.equals("")){
+                    BluetoothAdapter btAdapter = BluetoothAdapter.getDefaultAdapter();
+                    BluetoothDevice device = btAdapter.getRemoteDevice(deviceAddress);
+                    Toast.makeText(getApplicationContext(), "OBDII emparejado", Toast.LENGTH_SHORT).show();
+                    UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
 
-                BluetoothDevice device = btAdapter.getRemoteDevice(deviceAddress);
-
-                UUID uuid = UUID.fromString("00001101-0000-1000-8000-00805F9B34FB");
-
-
-
-
-                try {
-
-                    socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
-                    socket.connect();
-                    new EchoOffCommand().run(socket.getInputStream(), socket.getOutputStream());
-                    new LineFeedOffCommand().run(socket.getInputStream(), socket.getOutputStream());
-                    new TimeoutCommand(125).run(socket.getInputStream(), socket.getOutputStream());
-                    new SelectProtocolCommand(ObdProtocols.AUTO).run(socket.getInputStream(), socket.getOutputStream());
-                    Toast toastsucc1 = Toast.makeText(getApplicationContext(), "Entre1", Toast.LENGTH_SHORT);
-                } catch (IOException e) {
-                    Toast toasteror3 = Toast.makeText(getApplicationContext(), "No entre 3", Toast.LENGTH_SHORT);
-                    e.printStackTrace();
-                } catch (InterruptedException e) {
-                    Toast toasteror1 = Toast.makeText(getApplicationContext(), "No entre 1", Toast.LENGTH_SHORT);
-                    e.printStackTrace();
+                    try {
+                        socket = device.createInsecureRfcommSocketToServiceRecord(uuid);
+                        socket.connect();
+                        new EchoOffCommand().run(socket.getInputStream(), socket.getOutputStream());
+                        new LineFeedOffCommand().run(socket.getInputStream(), socket.getOutputStream());
+                        new TimeoutCommand(125).run(socket.getInputStream(), socket.getOutputStream());
+                        new SelectProtocolCommand(ObdProtocols.AUTO).run(socket.getInputStream(), socket.getOutputStream());
+                        Toast.makeText(getApplicationContext(), "Entre siuuuu 1", Toast.LENGTH_SHORT);
+                    } catch (IOException e) {
+                        Toast.makeText(getApplicationContext(), "No entre 1", Toast.LENGTH_SHORT);
+                        e.printStackTrace();
+                    } catch (InterruptedException e) {
+                        Toast.makeText(getApplicationContext(), "No entre 2", Toast.LENGTH_SHORT);
+                        e.printStackTrace();
+                    }
                 }
-
 
                 RPMCommand engineRpmCommand = new RPMCommand();
 
                 String Conducnum = Conduc;
                 locationListener = new LocationListener() {
 
-
-
                     public void onLocationChanged(Location location) {
                         try {
-
-                            engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
-
-                            Toast toastsucc2 = Toast.makeText(getApplicationContext(), "Entre2", Toast.LENGTH_SHORT);
-
 
                             String myLatidude = String.valueOf(location.getLatitude());
                             String myLongitude = String.valueOf(location.getLongitude());
 
                             String date = String.valueOf(location.getTime());
+                            String rpm = "";
 
-                            String message = "Latitude=" + myLatidude + ";" + "Longitude=" + myLongitude + ";" + "Fecha=" + date + ";" + "Conductor=" + Conducnum + ";" + "RPM= " + engineRpmCommand.getFormattedResult();
+                            if (socket != null){
+                                engineRpmCommand.run(socket.getInputStream(), socket.getOutputStream());
+                                rpm = engineRpmCommand.getFormattedResult();
+                                Toast.makeText(getApplicationContext(), "Midiendo rpm", Toast.LENGTH_SHORT).show();
+                            }
+
+                            String message = "Latitude=" + myLatidude + ";" + "Longitude=" + myLongitude + ";" + "Fecha=" + date + ";" + "Conductor=" + Conducnum + ";" + "RPM= " + rpm;
 
                             Message_sender2 ms2 = new Message_sender2(finalIPdest2, finalPuerto2);
                             Message_sender3 ms3 = new Message_sender3(finalIPdest1, finalPuerto2);
@@ -232,8 +230,10 @@ public class MainActivity extends AppCompatActivity {
                             ms5.execute(message);
                             ms6.execute(message);
 
+                            Toast.makeText(getApplicationContext(), "Mensaje enviado", Toast.LENGTH_SHORT).show();
+
                         } catch (Exception e) {
-                            Toast toasteror2 = Toast.makeText(getApplicationContext(), "No entre 2", Toast.LENGTH_SHORT);
+                            Toast toasteror2 = Toast.makeText(getApplicationContext(), "No entre 3", Toast.LENGTH_SHORT);
                             e.printStackTrace();
                         }
                     }
@@ -259,7 +259,7 @@ public class MainActivity extends AppCompatActivity {
                     locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, MIN_TIME, MIN_DIST, locationListener);
                     locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MIN_TIME, MIN_DIST, locationListener);
                 } catch (SecurityException e) {
-                    Toast toasteror4 = Toast.makeText(getApplicationContext(), "No entre 4", Toast.LENGTH_SHORT);
+                    Toast.makeText(getApplicationContext(), "No entre 4", Toast.LENGTH_SHORT);
                     e.printStackTrace();
                 }
 
